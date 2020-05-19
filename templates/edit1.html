@@ -1,0 +1,22 @@
+<html>
+<body>
+
+<p>Enter some text in the fields below, then press the "Submit form" button to submit the form.</p>
+
+<form id="myForm" method="POST">
+  {% csrf_token %}
+  First name: <input id = "setsanitaryTemp" type="text" name="setsanitaryTemp"><br>
+  Last name: <input id = "sethotwaterTemp" type="text" name="sethotwaterTemp"><br><br>
+  <input type="button" onclick="myFunction()" value="Submit form">
+</form>
+
+<script>
+function myFunction() {
+  document.getElementById("setsanitaryTemp").value="12";
+  document.getElementById("sethotwaterTemp").value="12";
+  document.getElementById("myForm").submit();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<html>
+<body>
+
+<p>Enter some text in the fields below, then press the "Submit form" button to submit the form.</p>
+<style>
+	.form-label-left, .form-label-right, .form-label-top { display:none; } 
+	</style>
+<form id="myForm" method="POST">
+  {% csrf_token %}
+  First name: <input id = "setsanitaryTemp" type="text" name="setsanitaryTemp"><br>
+  Last name: <input id = "sethotwaterTemp" type="text" name="sethotwaterTemp"><br><br>
+  <input type="button" onclick="myFunction()" value="Submit form">
+</form>
+
+<script>
+function myFunction() {
+ document.getElementById("setsanitaryTemp").value="33";
+ document.getElementById("sethotwaterTemp").value="33";
+ document.getElementById("myForm").submit();
+  // let data = {element: "barium"};
+//   var xhr = new XMLHttpRequest();
+//   var csrftoken = '{{ csrf_token }}';
+//   xhr.open("POST", "/edit/", true);
+//   xhr.setRequestHeader('Content-Type', 'application/json');
+//   window.alert(JSON.stringify({
+//       'csrfmiddlewaretoken': '{{ csrf_token }}',"setsanitaryTemp":'8',"sethotwaterTemp":'2'
+//
+//   }));
+//   xhr.send(JSON.stringify({
+//       csrfmiddlewaretoken: '{{ csrf_token }}',"setsanitaryTemp":'8',"sethotwaterTemp":'2'
+//
+//   }));
+// }
+</script>
+
+</body>
+</html>

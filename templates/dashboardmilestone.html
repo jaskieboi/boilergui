@@ -1,0 +1,655 @@
+<html>
+ <head> 
+  <meta charset="UTF-8" /> 
+
+ <body style="background-color:#F9F9F9;">   
+	 <div style="width:800px; margin:0 auto;">
+		 <H1> Hello, {{request.user}}, Welcome back to your boiler Dashboard! </H1>
+		 <p></p>
+		 <p></p>
+		 <a href="{% url 'edit' %}">Change temperature settings</a>
+		 
+	 </div>
+	 <div id = 'thermo' style="width:400px; margin:0 auto;" >
+		 
+	</div>
+	 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"> </script>
+	 <script>
+
+
+		 var santemperature = {{user.profile.actualsanitaryTemp}};
+		 var sansettemperature = {{user.profile.setsanitaryTemp}};
+		 var DHWtemperature = {{user.profile.actualhotwaterTemp}};
+		 var DHWsettemperature = {{user.profile.sethotwaterTemp}};
+
+		 function setup() {
+		   frameRate(30);
+		   var canvas = createCanvas(500, 500);
+		   canvas.parent('thermo');
+		   noStroke();
+		   //noLoop();  // Run once and stop
+		    background(249,249,249);
+  		  
+		 }
+
+		 function draw() {
+		   translate(200,200);
+		   pieCharti(175,sansettemperature);
+		   pieChart(300, santemperature,"Radiator temp");
+		   
+		   translate(0, 200);
+    	   pieCharti(175,DHWsettemperature);
+		   pieChart(300, DHWtemperature, "Hotwater temp");
+
+
+		 }
+
+		 function pieChart(diameter, data,titles) {
+   		 	 fill(0);
+   		 	 arc(0, 0, 200, 200, PI, 0);
+   		     push();
+   		     textSize(22);
+   		     fill(255);
+   		     text(titles, -65, -40);
+   		     text(data, -10, -10);
+   		     text("°", 15, -10);
+   		     fill(0);
+   		     text("0°", -125, 30);
+   		     text("75°", 105, 30);
+   		     pop();
+		     var angle =0;
+		     var prevangle=0;
+		     //pushMatrix();
+		     //fill(255);
+		     //popMatrix();
+		     fill(100);
+		     var starts=frameCount;
+    
+		     if(frameCount<=20){
+		       angle=((((PI/75)*(data)))/20);
+		       fill(map(angle*int(frameCount),0,PI,0,255),0,map(angle*int(frameCount),0,PI,255,0));
+		     arc(0, 0, diameter, diameter, ((angle-0.005)*int(frameCount-1))+PI,(angle*(int(frameCount)))+PI);  //0.005 to get rid of the stroke line (overlap)
+   		 	 fill(0);
+   		 	 arc(0, 0, 200, 200, PI, 0);
+   		     push();
+   		     textSize(22);
+   		     fill(255);
+   		     text(titles, -65, -40);
+   		     text(data, -10, -10);
+   		     text("°", 15, -10);
+   		     fill(0);
+   		     text("0°", -125, 30);
+   		     text("75°", 105, 30);
+   		     pop();
+			 }
+			 
+		     else{
+		      noLoop();}
+		 }
+
+		 function pieCharti(radius,datain){
+		     push();
+		     translate(0,-2);
+		     rotate(PI/2)
+		     rotate(((PI/75)*(datain+0.1)));
+		     strokeWeight(4); 
+		     stroke(204, 102, 0);
+		     line(0,0,0,radius);
+		     noStroke();
+		     rotate(PI);
+		     textSize(15);
+		     text("Target Temp: ", 10, 25-radius);
+		     text(datain, 105, 25-radius);
+		     text("°", 100, 25-radius);
+		     pop();
+			 
+  
+		 }
+
+	 </script>
+		 
+		 
+		 
+	<script>
+
+
+		var radiatortemperature = 40;
+		var radiatorsettemperature = 60;
+		var DHWtemperature = 40;
+		var DHWsettemperature = 60;
+		var thermostatpage=false;
+		var temperaturepage=false;
+		var hotwaterstate = true;
+		var radiatorsstate = true;
+		var  track=new Array (8);
+
+
+		var RADset;
+		var DHWset;
+
+		var debounce=0;
+		var rectOver= [];
+		var moved= [];
+		var times = [];
+		var check=false;
+
+		var once=false;
+		var once2=true;
+		var rectX = 10;      // Position of square button
+		var rectY = 100;
+		var rectSize = 14;  // Diameter of rect
+		var rectSizey = 30;
+
+
+		track[0]="AB";
+		track[1]="AC";
+		track[2]="AD";
+		track[3]="AE";
+		track[4]="AF";
+		track[5]="AG";
+		track[6]="AH";
+
+
+
+		function setup() {
+
+		  frameRate(30);
+		  var it = 0;
+		  for (it ; it < 7 ;  it++){
+		 rectOver[it]= [];
+		 moved[it]= [];
+		var itr = 0;
+		for ( itr = 0; itr<48;itr++){
+		  rectOver[it][itr]=false;
+		}}
+
+
+
+		  createCanvas(800, 480);
+		  noStroke();
+		  //noLoop();  // Run once and stop
+
+		  background(230);
+  
+
+
+		}
+
+
+		function temperature(){
+
+		    //hs1.update();
+		  //hs2.update();
+		  //DHWsettemperature=hs1.display();
+		  //sansettemperature=hs2.display();
+		  //var r = rSlider.value();
+		  //var g = gSlider.value();
+		  //background(r, g, b);
+		  //text("red", 165, 35);
+		  //text("green", 165, 65);
+
+		    radiatorsettemperature   =  RADset.value();
+		    DHWsettemperature =  DHWset.value();
+  
+		  textSize(80);
+		  fill(59,40);
+		  text("Hotwater "+ radiatorsettemperature, 190,height/4+25);
+		  text("Radiators "+DHWsettemperature, 190,3*height/4+25);
+		   noStroke();
+		     textSize(25);
+
+   
+		     if (hotwaterstate==true){
+		       fill(color('#F6AE2D'));
+		       rect(100,420,200,50,3);
+		     fill(255);
+		    text("Hotwater on",125,455);
+    
+		  }
+		  else{
+		           fill(50);
+		       rect(100,420,200,50,3);
+		     fill(255);
+		     text("Hotwater off",125,455);
+
+		  }
+    
+  
+		   if (radiatorsstate==true){
+		         fill(color('#F6AE2D'));
+		     rect(500,420,200,50,3);
+		     fill(255);
+		  text("Radiators on",525,455);
+		}
+
+
+  
+		  else{
+		    fill(50);
+		     rect(500,420,200,50,3);
+		     fill(255);
+		    text("Radiators off",525,455);
+		  }
+   
+   
+   
+   
+		   if ( ((mouseX >= 100 && mouseX <= 300) && (mouseY <= 470 && mouseY>=420))&&(millis()-debounce>500)) {
+		     if(mouseIsPressed){
+		     hotwaterstate=!hotwaterstate;
+		     debounce=millis();
+
+		  }
+
+		}
+
+  
+		  if ( ((mouseX >= 500 && mouseX <= 700) && (mouseY <= 470 && mouseY>=420))&&(millis()-debounce>500)) {
+		    if(mouseIsPressed){
+		    radiatorsstate=!radiatorsstate;
+		    debounce=millis();
+		  //if (radiatorsstate==false){
+		  }
+  
+		    }
+
+  
+  
+  
+
+  
+  
+		  for (var u =0; u<=15;u=u+1){
+		      textSize(10);
+		      fill(0);
+		    text(u*5,((785/75)*(u*5)),240);}
+    
+    
+
+
+
+		}
+
+
+		function draw() {
+
+		background(230);
+		  if ( thermostatpage==true) {
+    
+		    if (once==false){
+		    //background(230);
+		      var p=0;
+		for (p=0;p<7;p++){
+		var t=0;
+		for (t=0;t<4;t=t+2){
+		    var place1=unchar(track[p][t])-65;
+		    var place2=unchar(track[p][t+1])-65;
+		    //var place1=2;
+		    //var place2=4;
+		    var r=0;
+		     for (r=place1;r<place2; r++){
+		       rectOver[p][r]=true;
+		     }
+  
+  
+		}
+		}
+		// print (track[1]);
+		once=true;}
+
+
+		    thermo();
+    
+		  } 
+  
+		  else if ( temperaturepage==true) {
+		     // background(230);
+		     if (once2==true){
+		    RADset=createSlider(0, 75, radiatorsettemperature);
+		   RADset.position(0, height/4-5);
+		   RADset.style('width', '800px');
+		       DHWset=createSlider(0, 75, DHWsettemperature);
+		   DHWset.position(0,3*(height/4-3) );
+		   DHWset.style('width', '800px');
+		   once2=false
+		     }
+
+		temperature();
+		   //
+		  }
+		  else{
+		   dashboard(); 
+		  }
+  
+  
+
+
+		  if ( (mouseX >= 0 && mouseX <= 275) && (mouseY <= 50)) {
+		print("hellv3o");
+
+		    thermostatpage=true;
+    
+		    if (temperaturepage==true) {
+		    once2=true
+		      temperaturepage=false;
+		      RADset.remove();
+		      DHWset.remove();
+		    }
+    
+		  } else if ((mouseX >= 275 && mouseX <= 550 )&& (mouseY <= 50)) {///////////////////////////////////////////////////
+		print("hellov2");
+
+		    temperaturepage= true;
+    
+		    if (thermostatpage==true) {
+		      once=false;
+		      thermostatpage=false;
+		      var i=0;
+		     for (i=0;i<7;i++){
+		       track[i]=times[i];
+		     }
+     
+
+		    }
+
+
+
+		  } else if ((mouseX >= 550 && mouseX <= 800 )&& (mouseY <= 50)) {
+		    print("hello");
+
+		    if (temperaturepage==true) {
+		      temperaturepage=false;
+		      once2=true
+		      RADset.remove();
+		      DHWset.remove();
+		    }
+
+		    if (thermostatpage==true) {
+
+		      once=false;
+		        var i=0;
+		     for (i=0;i<7;i++){
+		       track[i]=times[i];
+		     }
+		      thermostatpage=false;
+		    }
+
+		  dashboard();
+    
+		  } 
+  
+
+    
+    
+		    noStroke();
+		  fill(color('#2F4858'));
+		rect(0,0,275,50);
+		 // translate(280,25);
+		 fill(255);
+		 textSize(30);
+		  text("Thermostat",50,35);
+  
+  
+		  fill(color('#33658A'));
+		rect(275,0,275,50);
+		 fill(255);
+		 textSize(30);
+		  text("Temperature",325,35);
+  
+		  fill(color('#55DDE0'));
+		rect(550,0,275,50);
+		 fill(255);
+		 textSize(30);
+		  text("Dashboard",600,35);
+
+		}
+
+
+		function dashboard() {
+		  push();
+		  translate(120, 180);  
+		  fill(0);
+		  textSize(20);
+		  text("Click for Hot Water ", -400, -200);
+		  translate(100, 200);
+		  pieChart(400, radiatortemperature, "Radiator:", 230, radiatorsettemperature);
+		  translate(420, 0);
+		  pieChart(400, DHWtemperature, "Hotwater:", 230, DHWsettemperature);
+		  translate(-200, -400);
+		  translate(-540, -200);
+		  pop();
+		}
+		function pieChart(diameter, data, titles, radius, datain) {
+
+		  var angle =0;
+		  noStroke();
+		  //push();;
+		  //fill(255);
+		  //pop();;
+		  fill(100);
+		  var r=0;
+		  while (r<=19) {
+		    r++;
+		    angle=((((PI/75)*(data)))/20);
+		    fill(map(angle*int(r), 0, PI, 0, 255), 0, map(angle*int(r), 0, PI, 255, 0));
+		    arc(0, 0, diameter, diameter, ((angle-0.005)*int(r-1))+PI, (angle*(int(r)))+PI);  //0.005 to get rid of the stroke line (overlap)
+		  }
+		  fill(0);
+		  arc(0, 0, 250, 250, PI, 2*PI);
+		  push();
+		  ;
+		  textSize(20);
+		  fill(255);
+		  text(titles, -65, -40);
+		  text(data, -10, -10);
+		  text("°", 15, -10);
+		  fill(0);
+		  textSize(30);
+		  text("0°", -125, 30);
+		  text("75°", 105, 30);
+		  pop();
+		  ;
+		  push();
+		  ;
+		  translate(0, -2);
+		  rotate(PI/2);
+		  rotate(((PI/75)*(datain+0.1)));
+		  var theta =((PI/75)*(datain+0.1));
+		  strokeWeight(4); 
+		  stroke(204, 102, 0);
+		  line(0, 0, 0, radius);
+		  noStroke();
+		  rotate((PI/2));
+		  textSize(18);
+		  fill(230, 60);
+		  rect(120, -30, 150, 30);
+		  fill(0);
+		  text("Target: ", 130, -10);
+		  text(datain, 200, -10);
+		  text("°", 223, -10);
+		  pop();
+		  ;
+		  fill(0);
+		  arc(0, 0, 250, 250, PI, 2*PI);
+		  push();
+		  ;
+		  textSize(80);
+		  fill(255);
+		  // text(titles, -130, -30);
+		  text(data +"°", -70, -20);
+
+		  pop();
+		  ;
+		}
+
+		function thermo() {
+
+		  background(230);
+		  strokeWeight(1);
+		  textSize(20);
+		  fill(color('#96BBBB'));
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 140 && mouseY >= 100)) {
+		  //  l=0;}
+    
+		  //  if (l==0){
+		  //    fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Monday", 690, 120);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 190 && mouseY >= 150)) {
+		  //  l=1;}
+    
+		  //  if (l==1){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Tuesday", 690, 170);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 240 && mouseY >= 200)) {
+		  //  l=2;}
+    
+		  //  if (l==2){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Wednesday", 690, 220);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 290 && mouseY >= 250)) {
+		  //  l=3;}
+    
+		  //  if (l==3){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Thursday", 690, 270);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 340 && mouseY >= 300)) {
+		  //  l=4;}
+    
+		  //  if (l==4){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Friday", 690, 320);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 390 && mouseY >= 350)) {
+		  //  l=5;}
+    
+		  //  if (l==5){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Saturday", 690, 370);
+  
+		  //if ( (mouseX >= 700 && mouseX <= 800) && (mouseY <= 440 && mouseY >= 400)) {
+		  //  l=6;}
+    
+		  //  if (l==6){
+		  //      fill(color('#96BBBB'));
+		  //}
+		  //else{
+		  // fill(0); 
+		  //}
+		  text ("Sunday", 690, 420);
+		  var l=0;
+		  for ( l=0; l <7; l++) {  
+    
+		   // track[l]=0;
+		    var temptrack=0;
+		    var sthap=false;
+		    times[l]="";
+		    for (var i=0; i <48; i++) {
+      
+
+		      if ((mouseX >= (rectX+(rectSize*i)) && mouseX <= (rectX+(rectSize*i)+rectSize) && 
+		        mouseY >= (rectY + (rectSizey+20)*l) && mouseY <= (rectY + (rectSizey+20)*l)+rectSizey)) {
+		          if (mouseIsPressed){
+		        if (moved[l][i]==true) {
+		          moved[l][i]=false;
+		          rectOver[l][i] =!rectOver[l][i];
+		          check=true;
+		        } else {
+		          moved[l][i]=false;
+		        }
+		      } }else {
+		        check=false;
+		        moved[l][i]=true;
+		        rectOver[l][i]= rectOver[l][i];
+		      }
+		      rectOver[l][i]= rectOver[l][i];
+
+
+		      //noStroke();
+		      if ((rectOver[l][i]==false)&&(sthap==true)) {
+		        times[l]=times[l]+char(i+65);
+		     //  temptrack=temptrack+ int(pow(2, i-1));
+		        fill(color('#F26419'));
+		        sthap=false;
+		      } 
+		      else if ((rectOver[l][i])&&(sthap==false)) {
+		        fill(color('#F6AE2D'));
+		        times[l]=times[l]+char(i+65);
+		       // temptrack=temptrack+ int(pow(2, i));
+		        sthap=true;
+		      } else if (rectOver[l][i]) {
+		        fill(color('#F6AE2D'));
+		      } else {
+		        fill(color('#F26419'));
+		      }
+
+		      stroke(255);
+
+		      rect(rectX+(rectSize*i), ((rectY + (rectSizey+20)*l)), rectSize, rectSizey,2);
+      
+		    //  push();
+		      //stroke(0);
+		      //line (rectX+(rectSize*i), 90,  (rectX+(rectSize*i)),450);
+		      // textSize(10);
+		      // var tex;
+		      // var timetext = i/2 ;
+		       //if (timetext-timetext > 0 ){
+		       //  tex= String.valueOf(((int)timetext));
+		       //        text (tex, ((rectSize*i)-9),465);
+		       //        text (tex, ((rectSize*i)-9),87);
+		       //}
+       
+		       //else{
+		       //  tex= String.valueOf(((int)timetext))+":30";
+		       //}
+       
+       
+
+
+		      //pop();
+		    }
+    
+
+
+
+
+		  //track[l]=temptrack;
+
+		  }
+
+		}
+
+		
+		
+	</script>
+
+	 <a href="{% url 'logout' %}"> logout</a>
+ </body>
+</html>
